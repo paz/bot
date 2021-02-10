@@ -72,6 +72,9 @@ typings/
 .env
 .env.test
 
+# potential secrets
+GOOGLE_APPLICATION.json
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 
