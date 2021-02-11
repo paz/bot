@@ -94,7 +94,7 @@ client.on("message", async (message) => {
   if(!cmd) return;
 
   try {
-    cmd.execute(message, args, latency);
+    cmd.execute(message, args, latency, client.commands);
   } catch (error) {
     console.error(error);
     message.reply('there was an error trying to execute that command!');
