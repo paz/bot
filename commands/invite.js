@@ -19,6 +19,7 @@ module.exports = {
         if (shared.validId(args[0])) {
           bot = await client.fetchUser(args[0]);
           if (!bot) {
+            return message.channel.send('Invalid ID');
           } else {
             botId = bot.id;
           }

@@ -1,4 +1,5 @@
 const fetch = require("node-fetch");
+//const Discord = require("discord.js");
 
 module.exports = {
   statusWebhook: async (embed) => {
@@ -99,4 +100,17 @@ module.exports = {
       );
     return false;
   },
+  getUserArg: async (message, args, client) => {
+    if (message.mentions.users.size > 0) {
+      user = message.mentions.users.first();
+    } else {
+      if (module.exports.validId(args[0])) {
+        user = await client.users.fetch(args[0]);
+        if (!user) {
+          return false;
+        }
+      }
+    }
+    return user;
+  }
 };
