@@ -3,7 +3,7 @@ const Discord = require("discord.js");
 module.exports = {
   alias: ["ping", "latency"],
   description: "See the latency of the bot",
-  usage: "[command]",
+  usage: "",
   execute(message, args, latency) {
     let embed = new Discord.MessageEmbed();
     embed.setTitle("Latency");

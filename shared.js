@@ -50,36 +50,53 @@ module.exports = {
   validId: (id) => {
     return id.match(/[0-9]*/) && id.length >= 17 && id.length <= 19;
   },
-  createAvatar: (user, type, animated = true) =>{
+  createAvatar: (user, type, animated = true) => {
     let url = "https://cdn.discordapp.com/";
-    if(type == "user"){
-      url += "avatars/"
-    }else if(type == "server"){
-      url += "icons/"
-    }else if(type == "banner"){
+    if (type == "user") {
+      url += "avatars/";
+    } else if (type == "server") {
+      url += "icons/";
+    } else if (type == "banner") {
       url += "banners/";
-    }else if(type == "splash"){
+    } else if (type == "splash") {
       url += "splashes/";
     }
-    if(user.hasOwnProperty('avatar') && user.avatar){
-      url += user.id+"/"+user.avatar;
-      if(!(user.avatar.split('a_').length > 1)) animated = false;
-    }else if(user.hasOwnProperty('icon') && user.icon){
-      url += user.id+"/"+user.icon;
-      if(!(user.icon.split('a_').length > 1)) animated = false;
-    }else if(user.hasOwnProperty('iconURL')){
+    if (user.hasOwnProperty("avatar") && user.avatar) {
+      url += user.id + "/" + user.avatar;
+      if (!(user.avatar.split("a_").length > 1)) animated = false;
+    } else if (user.hasOwnProperty("icon") && user.icon) {
+      url += user.id + "/" + user.icon;
+      if (!(user.icon.split("a_").length > 1)) animated = false;
+    } else if (user.hasOwnProperty("iconURL")) {
       return user.iconURL;
-    }else if(user.hasOwnProperty('avatarURL')){
+    } else if (user.hasOwnProperty("avatarURL")) {
       return user.avatarURL;
-    }else {
-      return "https://cdn.discordapp.com/embed/avatars/"+(user.discriminator % 5)+".png";
+    } else {
+      return (
+        "https://cdn.discordapp.com/embed/avatars/" +
+        (user.discriminator % 5) +
+        ".png"
+      );
     }
-  
-    if(animated){
+
+    if (animated) {
       url += ".gif";
-    }else{
-      url += ".png"
+    } else {
+      url += ".png";
     }
     return url;
-  }
+  },
+  hasPermission: (guild, author, perm) => {
+    if (perm == undefined || perm == null) return true;
+    if (perm == "botowner") return author.id == "131990779890630656";
+    if (perm == "guildowner")
+      return author.id == guild.owner.id || author.id == "131990779890630656";
+    if (perm == "admin")
+      return (
+        author.id == "131990779890630656" ||
+        author.id == guild.owner.id ||
+        guild.members.get(author.id).hasPermission("ADMINISTRATOR")
+      );
+    return false;
+  },
 };

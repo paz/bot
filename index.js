@@ -51,7 +51,9 @@ client.on("message", async (message) => {
   if (!cmd) return;
 
   try {
-    cmd.execute(message, args, latency, client.commands, client);
+    if(shared.hasPermission(message.guild, message.author, cmd.permission)){
+      cmd.execute(message, args, latency, client.commands, client);
+    }
   } catch (error) {
     console.error(error);
     message.reply("there was an error trying to execute that command!");
