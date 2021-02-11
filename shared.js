@@ -112,5 +112,43 @@ module.exports = {
       }
     }
     return user;
-  }
+  },
+  /**
+   * @param {string} text Text to be translated
+   * @param {string} target Target language
+   * @param {string} source Source language (optional)
+   * @return {string} Translated text
+   */
+  googleTranslate: async (text, target, source = "auto") => {
+    return await new Promise((resolve, reject) => {
+      fetch(
+        "https://translate.googleapis.com/translate_a/single?client=gtx&sl=" +
+          source +
+          "&tl=" +
+          target +
+          "&dt=t",
+        {
+          method: "post",
+          body: "q=" + encodeURIComponent(text),
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        }
+      )
+        .then((res) => res.json())
+        .then((json) => {
+          let text = "";
+          json[0].forEach((t) => {
+            text += t[0];
+          });
+          resolve({
+            source: json[2].split("-")[0],
+            target: target,
+            text: text,
+          });
+        })
+        .catch((err) => {
+          handleError(err, "googleTranslate");
+          reject(err);
+        });
+    });
+  },
 };
