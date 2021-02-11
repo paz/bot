@@ -1,4 +1,5 @@
 const Discord = require("discord.js");
+const shared = require("../shared")
 
 module.exports = {
   alias: ["ping", "latency"],
@@ -8,7 +9,7 @@ module.exports = {
     let embed = new Discord.MessageEmbed();
     embed.setTitle("Latency");
     embed.setDescription("Discord latency is ..");
-    embed.setFooter(Date.now() - latency + "ms");
+    embed.setFooter(shared.createFooter(message, latency), shared.createAvatar(message.author, "user"));
     let discordLatency = Date.now();
     message.channel.send(embed).then((msg) => {
       embed.setDescription(

@@ -151,4 +151,7 @@ module.exports = {
         });
     });
   },
+  createFooter: (message, latency) => {
+    return message.author.username + "#" + message.author.discriminator + " • " + (Date.now() - latency) + "ms"
+  }
 };

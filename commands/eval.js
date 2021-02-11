@@ -11,7 +11,7 @@ module.exports = {
     embed.setTitle("eval");
     let response = eval(args.join(' '));
     embed.setDescription("```"+response+"```");
-    embed.setFooter(Date.now() - latency + "ms");
+    embed.setFooter(shared.createFooter(message, latency), shared.createAvatar(message.author, "user"));
     message.channel.send(embed)
   },
 };

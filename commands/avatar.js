@@ -18,7 +18,7 @@ module.exports = {
     embed.setTitle("``"+user.username+"``'s avatar");
     embed.setImage(avatar);
     embed.setDescription("[Full Resolution]("+avatar+"?size=2048)");
-    embed.setFooter(Date.now() - latency + "ms");
+    embed.setFooter(shared.createFooter(message, latency), shared.createAvatar(message.author, "user"));
     message.channel.send(embed)
   },
 };
