@@ -81,6 +81,7 @@ client.on("message", async (message) => {
   if (
     !message.content.startsWith(prefix) ||
     message.author.bot ||
+    message.webhookID ||
     message.author.id === client.user.id
   ) { return; }
 
