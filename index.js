@@ -70,7 +70,7 @@ client.on("message", async (message) => {
   if (!cmd) return;
 
   if(!cooldowns.has(cmd.alias[0])){
-    cooldowns.set(command.alias[0], new Discord.Collection())
+    cooldowns.set(cmd.alias[0], new Discord.Collection())
   }
 
   const timestamps = cooldowns.get(cmd.alias[0]);
@@ -79,17 +79,17 @@ client.on("message", async (message) => {
   if (timestamps.has(message.author.id)) {
     const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
   
-    if (now < expirationTime) {
-      const timeLeft = (expirationTime - now) / 1000;
+    if (latency < expirationTime) {
+      const timeLeft = (expirationTime - latency) / 1000;
       return message.reply(`please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command}\` command.`);
     }
   }
 
-  timestamps.set(message.author.id, now);
+  timestamps.set(message.author.id, latency);
   setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
 
   try {
-    if (cmd.permission && shared.hasPermission(message.guild, message.author, cmd.permission)) {
+    if (shared.hasPermission(message.guild, message.author, cmd.permission)) {
       if(cmd.guild === true && !message.guild){
         return message.channel.send("This command can only be used in a guild.")
       }

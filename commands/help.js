@@ -5,6 +5,7 @@ module.exports = {
   alias: ["help", "commands"],
   description: "List of all commands",
   usage: "[command]",
+  cooldown: 3,
   execute(message, args, latency, commands) {
     let embed = new Discord.MessageEmbed();
     embed.setAuthor("Help");
