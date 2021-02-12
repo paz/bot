@@ -17,8 +17,8 @@ module.exports = {
     Tags
   ) {
     const embed = new Discord.MessageEmbed();
-    const tagName = args.shift();
-    const tagDescription = args.join(" ");
+    let tagName = args.shift();
+    let tagDescription = args.join(" ");
     if (tagName === "list") {
       const tagList = await Tags.findAll({
         attributes: ["name"],
@@ -40,6 +40,8 @@ module.exports = {
       }
       return message.reply(`Could not find tag: ${tagName}`);
     } else if (tagName === "edit") {
+      tagName = args.shift();
+      tagDescription = args.join(" ");
       const affectedRows = await Tags.update(
         {
           description: tagDescription
