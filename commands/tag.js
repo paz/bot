@@ -41,8 +41,8 @@ module.exports = {
         const author = await client.users.fetch(tag.get("owner"));
         embed.setAuthor(author.username + "#" + author.discriminator, createAvatar(author, "user"));
         embed.setTimestamp(new Date(tag.get("createdAt")));
-        embed.setTitle(tag.get("name"));
-        embed.setDescription(tag.get("description"));
+        embed.setTitle(tag.get("name") + " • " + tag.get("uses") + " uses");
+        embed.setDescription(tag.get("description") + "\n\n*Last modified ``" + new Date(tag.get("updatedAt")) + "``*");
       } else {
         embed.setDescription(`Could not find tag: ${tagName}`);
       }
