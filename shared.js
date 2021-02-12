@@ -152,6 +152,13 @@ module.exports = {
     });
   },
   createFooter: (message, latency) => {
-    return message.author.username + "#" + message.author.discriminator + " • " + (Date.now() - latency) + "ms"
-  }
+    return (
+      message.author.username +
+      "#" +
+      message.author.discriminator +
+      " • " +
+      (Date.now() - latency) +
+      "ms"
+    );
+  },
 };
