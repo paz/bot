@@ -6,7 +6,6 @@ module.exports = {
   description: "View/set prefix for guild",
   usage: "[prefix]",
   guild: true,
-  args: true,
   async execute(message, args, latency, commands, client, prefixes, globalPrefix) {
     let embed = new Discord.MessageEmbed();
     embed.setTitle("Prefix for "+message.guild.name)

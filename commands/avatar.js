@@ -2,7 +2,7 @@ const Discord = require("discord.js");
 const shared = require("../shared");
 
 module.exports = {
-  alias: ["avatar", "avi", "pfp"],
+  alias: ["avatar", "avi", "pfp", "icon"],
   description: "See your avatar",
   usage: "[id / @mention]",
   async execute(message, args, latency, commands, client) {

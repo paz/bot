@@ -9,6 +9,8 @@ const globalPrefix = ",";
 
 const prefixes = new Keyv(process.env.keyv, { namespace: 'prefixes' });
 
+const cooldowns = new Discord.Collection();
+
 // commands
 client.commands = new Discord.Collection();
 const commandFiles = fs
@@ -67,8 +69,30 @@ client.on("message", async (message) => {
 
   if (!cmd) return;
 
+  if(!cooldowns.has(cmd.alias[0])){
+    cooldowns.set(command.alias[0], new Discord.Collection())
+  }
+
+  const timestamps = cooldowns.get(cmd.alias[0]);
+  const cooldownAmount = (cmd.cooldown || 1) * 1000;
+
+  if (timestamps.has(message.author.id)) {
+    const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
+  
+    if (now < expirationTime) {
+      const timeLeft = (expirationTime - now) / 1000;
+      return message.reply(`please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command}\` command.`);
+    }
+  }
+
+  timestamps.set(message.author.id, now);
+  setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
+
   try {
-    if (shared.hasPermission(message.guild, message.author, cmd.permission)) {
+    if (cmd.permission && shared.hasPermission(message.guild, message.author, cmd.permission)) {
+      if(cmd.guild === true && !message.guild){
+        return message.channel.send("This command can only be used in a guild.")
+      }
       cmd.execute(message, args, latency, client.commands, client, prefixes, globalPrefix);
     }
   } catch (error) {
