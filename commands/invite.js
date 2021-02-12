@@ -5,8 +5,8 @@ module.exports = {
   alias: ["invite", "inv"],
   description: "Invite a bot to your server",
   usage: "[bot id / @mention]",
-  async execute(message, args, latency, commands, client) {
-    let embed = new Discord.MessageEmbed();
+  async execute (message, args, latency, commands, client) {
+    const embed = new Discord.MessageEmbed();
     let inviteUrl;
     let self = false;
     let bot;
@@ -14,20 +14,17 @@ module.exports = {
     if (args.length > 0) {
       if (message.mentions.users.size > 0) {
         bot = message.mentions.users.first();
-        botId = bot.id;
       } else {
         if (shared.validId(args[0])) {
-          bot = await client.fetchUser(args[0]);
+          bot = await client.users.fetch(args[0]);
           if (!bot) {
-            return message.channel.send('Invalid ID');
-          } else {
-            botId = bot.id;
+            return message.channel.send("Invalid ID");
           }
         }
       }
       inviteUrl =
         "https://discord.com/api/oauth2/authorize?client_id=" +
-        botId +
+        bot.id +
         "&permissions=";
     } else {
       self = true;
@@ -57,5 +54,5 @@ module.exports = {
 
     embed.setFooter(shared.createFooter(message, latency), shared.createAvatar(message.author, "user"));
     message.channel.send(embed);
-  },
+  }
 };
