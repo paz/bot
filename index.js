@@ -94,8 +94,9 @@ client.on("message", async (message) => {
   let prefix;
   if (message.guild) {
     const guildPrefix = await prefixes.get(message.guild.id);
-    if (message.content.startsWith(guildPrefix)) prefix = guildPrefix;
-    if (!prefix) return;
+    if (guildPrefix && guildPrefix !== null) {
+      prefix = guildPrefix;
+    }
   } else {
     prefix = globalPrefix;
   }
