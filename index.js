@@ -6,11 +6,16 @@ const Discord = require("discord.js");
 const client = new Discord.Client();
 const Keyv = require("keyv");
 const Sequelize = require("sequelize");
-const sequelize = new Sequelize(process.env.db_name, process.env.db_user, process.env.db_pass, {
-  host: process.env.db_host,
-  dialect: "mariadb",
-  logging: false
-});
+const sequelize = new Sequelize(
+  process.env.db_name,
+  process.env.db_user,
+  process.env.db_pass,
+  {
+    host: process.env.db_host,
+    dialect: "mariadb",
+    logging: false
+  }
+);
 
 const globalPrefix = ",";
 const prefixes = new Keyv(process.env.keyv, { namespace: "prefixes" });
@@ -45,6 +50,19 @@ const Tags = sequelize.define("tags", {
     defaultValue: 0,
     allowNull: false
   }
+});
+
+const Guilds = sequelize.define("guilds", {
+  id: {
+    type: Sequelize.STRING,
+    unique: true
+  },
+  join_message: { type: Sequelize.TEXT, allowNull: true },
+  leave_message: { type: Sequelize.TEXT, allowNull: true },
+  ban_message: { type: Sequelize.TEXT, allowNull: true },
+  unban_message: { type: Sequelize.TEXT, allowNull: true },
+  admin_messages: { type: Sequelize.STRING, allowNull: true },
+  user_messages: { type: Sequelize.STRING, allowNull: true }
 });
 
 // events
@@ -83,7 +101,9 @@ client.on("message", async (message) => {
     message.author.bot ||
     message.webhookID ||
     message.author.id === client.user.id
-  ) { return; }
+  ) {
+    return;
+  }
 
   const args = message.content.slice(prefix.length).trim().split(/ +/);
   const command = args.shift().toLowerCase();
@@ -104,7 +124,11 @@ client.on("message", async (message) => {
 
     if (latency < expirationTime) {
       const timeLeft = (expirationTime - latency) / 1000;
-      return message.reply(`please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command}\` command.`);
+      return message.reply(
+        `please wait ${timeLeft.toFixed(
+          1
+        )} more second(s) before reusing the \`${command}\` command.`
+      );
     }
   }
 
@@ -114,16 +138,53 @@ client.on("message", async (message) => {
   try {
     if (shared.hasPermission(message.guild, message.author, cmd.permission)) {
       if (cmd.guild === true && !message.guild) {
-        return message.channel.send("This command can only be used in a guild.");
+        return message.channel.send(
+          "This command can only be used in a guild."
+        );
       }
       if (cmd.args && !args.length) {
-        return message.channel.send("Syntax: ``" + prefix + command + " " + cmd.usage + "``");
+        return message.channel.send(
+          "Syntax: ``" + prefix + command + " " + cmd.usage + "``"
+        );
       }
-      cmd.execute(message, args, latency, client.commands, client, prefixes, globalPrefix, Tags);
+      cmd.execute(
+        message,
+        args,
+        latency,
+        client.commands,
+        client,
+        prefixes,
+        globalPrefix,
+        Tags
+      );
     }
   } catch (error) {
     console.error(error);
     message.reply("there was an error trying to execute that command!");
+  }
+});
+
+client.on("guildMemberAdd", async (member) => {
+  const guild = member.guild;
+  const user = member.user;
+  const join_message = Guilds.get("join_message");
+  const user_messages = Guilds.get("user_messages");
+  if (join_message && join_message !== "disable") {
+    if (user_messages && user_messages !== "disable") {
+      const user_channel = guild.channels.resolveID(user_messages);
+      if (!user_channel) return;
+      const embed = new Discord.MessageEmbed();
+      embed.setDescription(
+        join_message
+          .split("%name")
+          .join(user.username)
+          .split("%id")
+          .join(user.id)
+          .split("%tag")
+          .join(user.username + "#" + user.discriminator)
+      );
+      user_channel.send(embed);
+    }
   }
 });
 
@@ -133,43 +194,67 @@ client.on("guildBanAdd", async (guild, user) => {
     type: "MEMBER_BAN_ADD"
   });
   const banLog = fetchedLogs.entries.first();
-  if (!banLog) return console.log(`${user.tag} was banned from ${guild.name} but no audit log could be found.`);
+  if (!banLog) {
+    return console.log(
+      `${user.tag} was banned from ${guild.name} but no audit log could be found.`
+    );
+  }
   const { executor, target } = banLog;
   if (target.id === user.id) {
-    console.log(`${user.tag} got hit with the swift hammer of justice in the guild ${guild.name}, wielded by the mighty ${executor.tag}`);
+    console.log(
+      `${user.tag} got hit with the swift hammer of justice in the guild ${guild.name}, wielded by the mighty ${executor.tag}`
+    );
   } else {
-    console.log(`${user.tag} got hit with the swift hammer of justice in the guild ${guild.name}, audit log fetch was inconclusive.`);
+    console.log(
+      `${user.tag} got hit with the swift hammer of justice in the guild ${guild.name}, audit log fetch was inconclusive.`
+    );
   }
 });
 
-client.on("guildMemberRemove", async member => {
+client.on("guildMemberRemove", async (member) => {
   const fetchedLogs = await member.guild.fetchAuditLogs({
     limit: 1,
     type: "MEMBER_KICK"
   });
   const kickLog = fetchedLogs.entries.first();
-  if (!kickLog) return console.log(`${member.user.tag} left the guild, most likely of their own will.`);
+  if (!kickLog) {
+    return console.log(
+      `${member.user.tag} left the guild, most likely of their own will.`
+    );
+  }
   const { executor, target } = kickLog;
   if (target.id === member.id) {
-    console.log(`${member.user.tag} left the guild; kicked by ${executor.tag}?`);
+    console.log(
+      `${member.user.tag} left the guild; kicked by ${executor.tag}?`
+    );
   } else {
-    console.log(`${member.user.tag} left the guild, audit log fetch was inconclusive.`);
+    console.log(
+      `${member.user.tag} left the guild, audit log fetch was inconclusive.`
+    );
   }
 });
 
-client.on("messageDelete", async message => {
+client.on("messageDelete", async (message) => {
   if (!message.guild) return;
   const fetchedLogs = await message.guild.fetchAuditLogs({
     limit: 1,
     type: "MESSAGE_DELETE"
   });
   const deletionLog = fetchedLogs.entries.first();
-  if (!deletionLog) return console.log(`A message by ${message.author.tag} was deleted, but no relevant audit logs were found.`);
+  if (!deletionLog) {
+    return console.log(
+      `A message by ${message.author.tag} was deleted, but no relevant audit logs were found.`
+    );
+  }
   const { executor, target } = deletionLog;
   if (target.id === message.author.id) {
-    console.log(`A message by ${message.author.tag} was deleted by ${executor.tag}.`);
+    console.log(
+      `A message by ${message.author.tag} was deleted by ${executor.tag}.`
+    );
   } else {
-    console.log(`A message by ${message.author.tag} was deleted, but we don't know by who.`);
+    console.log(
+      `A message by ${message.author.tag} was deleted, but we don't know by who.`
+    );
   }
 });
 
