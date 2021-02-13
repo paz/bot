@@ -14,6 +14,7 @@ module.exports = {
     semi: ["error", "always"],
     quotes: ["error", "double"],
     "linebreak-style": 0,
-    camelcase: 0
+    camelcase: 0,
+    "no-prototype-builtins": 0
   }
 };
