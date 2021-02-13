@@ -97,7 +97,7 @@ module.exports = {
       return (
         author.id === "131990779890630656" ||
         author.id === guild.owner.id ||
-        guild.members.get(author.id).hasPermission("ADMINISTRATOR")
+        guild.members.resolve(author.id).hasPermission("ADMINISTRATOR")
       );
     }
     return false;
