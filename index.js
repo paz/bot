@@ -41,7 +41,8 @@ process.on("unhandledRejection", (err) => shared.handleError(err));
 const Tags = sequelize.define("tags", {
   name: {
     type: Sequelize.STRING,
-    unique: true
+    unique: true,
+    primaryKey: true
   },
   description: Sequelize.TEXT,
   owner: Sequelize.STRING,
@@ -55,20 +56,27 @@ const Tags = sequelize.define("tags", {
 const Guilds = sequelize.define("guilds", {
   id: {
     type: Sequelize.STRING,
-    unique: true
+    unique: true,
+    primaryKey: true
   },
   join_message: { type: Sequelize.TEXT, allowNull: true },
   leave_message: { type: Sequelize.TEXT, allowNull: true },
   ban_message: { type: Sequelize.TEXT, allowNull: true },
-  unban_message: { type: Sequelize.TEXT, allowNull: true },
+  kick_message: { type: Sequelize.TEXT, allowNull: true },
   admin_messages: { type: Sequelize.STRING, allowNull: true },
   user_messages: { type: Sequelize.STRING, allowNull: true }
 });
 
+const sequelize_sync_options = {
+  alter: true,
+  drop: false
+};
+
 // events
 
 client.on("ready", async () => {
-  Tags.sync();
+  Tags.sync(sequelize_sync_options);
+  Guilds.sync(sequelize_sync_options);
 
   console.log(
     `Logged in as ${client.user.tag}!
@@ -155,7 +163,8 @@ client.on("message", async (message) => {
         client,
         prefixes,
         globalPrefix,
-        Tags
+        Tags,
+        Guilds
       );
     }
   } catch (error) {
@@ -167,11 +176,13 @@ client.on("message", async (message) => {
 client.on("guildMemberAdd", async (member) => {
   const guild = member.guild;
   const user = member.user;
-  const join_message = Guilds.get("join_message");
-  const user_messages = Guilds.get("user_messages");
+  const Guild = (await Guilds.findOrCreate({ where: { id: guild.id } }))[0]
+    .dataValues;
+  const join_message = Guild.join_message;
+  const user_messages = Guild.user_messages;
   if (join_message && join_message !== "disable") {
     if (user_messages && user_messages !== "disable") {
-      const user_channel = guild.channels.resolveID(user_messages);
+      const user_channel = guild.channels.resolve(user_messages);
       if (!user_channel) return;
       let embed = new Discord.MessageEmbed();
       embed.setDescription(
@@ -183,18 +194,28 @@ client.on("guildMemberAdd", async (member) => {
           .split("%tag")
           .join(user.username + "#" + user.discriminator)
       );
-      embed.setFooter(user.id + " • " + user.username + "#" + user.discriminator);
+      embed.setThumbnail(shared.createAvatar(user, "user"));
+      embed.setFooter(
+        user.id + " • " + user.username + "#" + user.discriminator
+      );
       embed.setTimestamp(user.createdTimestamp);
       user_channel.send(embed);
 
-      if (user.createdTimestamp > Date.now() - 1.21e+9) {
+      if (user.createdTimestamp > Date.now() - 1.21e9) {
         embed = new Discord.MessageEmbed();
-        embed.setDescription(shared.emoji.newDiscord + " Account is ``" + shared.timeAgo(user.createdTimestamp) + "`` old");
+        embed.setDescription(
+          shared.emoji.newDiscord +
+            " Account is ``" +
+            shared.timeAgo(user.createdTimestamp) +
+            "`` old"
+        );
         user_channel.send(embed);
       }
     }
   }
 });
+
+const auditLogDelay = 2500;
 
 client.on("guildBanAdd", async (guild, user) => {
   const fetchedLogs = await guild.fetchAuditLogs({
@@ -202,20 +223,48 @@ client.on("guildBanAdd", async (guild, user) => {
     type: "MEMBER_BAN_ADD"
   });
   const banLog = fetchedLogs.entries.first();
-  if (!banLog) {
-    return console.log(
-      `${user.tag} was banned from ${guild.name} but no audit log could be found.`
-    );
-  }
   const { executor, target } = banLog;
-  if (target.id === user.id) {
-    console.log(
-      `${user.tag} got hit with the swift hammer of justice in the guild ${guild.name}, wielded by the mighty ${executor.tag}`
-    );
-  } else {
-    console.log(
-      `${user.tag} got hit with the swift hammer of justice in the guild ${guild.name}, audit log fetch was inconclusive.`
-    );
+  const lastBanDelay = (Date.now() - shared.snowstamp(banLog.id));
+
+  const Guild = (await Guilds.findOrCreate({ where: { id: guild.id } }))[0]
+    .dataValues;
+  let ban_message = Guild.ban_message;
+  const user_messages = Guild.user_messages;
+  if (ban_message && ban_message !== "disable") {
+    if (user_messages && user_messages !== "disable") {
+      const user_channel = guild.channels.resolve(user_messages);
+      if (!user_channel) return;
+      const embed = new Discord.MessageEmbed();
+      let banReason;
+      if (banLog.reason && banLog.reason !== null) {
+        banReason = banLog.reason;
+      } else {
+        banReason = "none";
+      }
+      ban_message = ban_message
+        .split("%name")
+        .join(user.username)
+        .split("%id")
+        .join(user.id)
+        .split("%tag")
+        .join(user.username + "#" + user.discriminator);
+      if (banLog && target.id === user.id && lastBanDelay < auditLogDelay) {
+        ban_message = ban_message
+          .split("%executedBy")
+          .join("by <@" + executor.id + ">")
+          .split("%executorId")
+          .join(executor.id)
+          .split("%reason")
+          .join(banReason);
+      }
+      embed.setDescription(ban_message);
+      embed.setThumbnail(shared.createAvatar(user, "user"));
+      embed.setFooter(
+        user.id + " • " + user.username + "#" + user.discriminator
+      );
+      embed.setTimestamp(user.createdTimestamp);
+      user_channel.send(embed);
+    }
   }
 });
 
@@ -225,20 +274,55 @@ client.on("guildMemberRemove", async (member) => {
     type: "MEMBER_KICK"
   });
   const kickLog = fetchedLogs.entries.first();
-  if (!kickLog) {
-    return console.log(
-      `${member.user.tag} left the guild, most likely of their own will.`
-    );
-  }
   const { executor, target } = kickLog;
-  if (target.id === member.id) {
-    console.log(
-      `${member.user.tag} left the guild; kicked by ${executor.tag}?`
-    );
-  } else {
-    console.log(
-      `${member.user.tag} left the guild, audit log fetch was inconclusive.`
-    );
+  const lastKickDelay = (Date.now() - shared.snowstamp(kickLog.id));
+
+  const guild = member.guild;
+  const user = member.user;
+  const Guild = (await Guilds.findOrCreate({ where: { id: guild.id } }))[0]
+    .dataValues;
+  const leave_message = Guild.leave_message;
+  const kick_message = Guild.kick_message;
+  const user_messages = Guild.user_messages;
+  if (leave_message && leave_message !== "disable") {
+    if (user_messages && user_messages !== "disable") {
+      const user_channel = guild.channels.resolve(user_messages);
+      if (!user_channel) return;
+      const embed = new Discord.MessageEmbed();
+      let message = leave_message;
+      let kickReason;
+      if (kickLog && kick_message && kick_message !== "disable" && lastKickDelay < auditLogDelay) {
+        message = kick_message;
+        if (kickLog.reason && kickLog.reason !== null) {
+          kickReason = kickLog.reason;
+        } else {
+          kickReason = "none";
+        }
+      }
+      message = message
+        .split("%name")
+        .join(user.username)
+        .split("%id")
+        .join(user.id)
+        .split("%tag")
+        .join(user.username + "#" + user.discriminator);
+      if (kickLog && target.id === user.id) {
+        message = message
+          .split("%executedBy")
+          .join("by <@" + executor.id + ">")
+          .split("%executorId")
+          .join(executor.id)
+          .split("%reason")
+          .join(kickReason);
+      }
+      embed.setDescription(message);
+      embed.setThumbnail(shared.createAvatar(user, "user"));
+      embed.setFooter(
+        user.id + " • " + user.username + "#" + user.discriminator
+      );
+      embed.setTimestamp(user.createdTimestamp);
+      user_channel.send(embed);
+    }
   }
 });
 

@@ -204,5 +204,13 @@ module.exports = {
     } else {
       return seconds + "s";
     }
+  },
+  toTitleCase: (str) => {
+    return str.replace(/\w\S*/g, function (txt) {
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
+  },
+  snowstamp: snowflake => {
+    return new Date(snowflake / 4194304 + 1420070400000);
   }
 };
