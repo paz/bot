@@ -93,12 +93,8 @@ client.on("message", async (message) => {
   const latency = Date.now();
   let prefix;
   if (message.guild) {
-    if (message.content.startsWith(globalPrefix)) {
-      prefix = globalPrefix;
-    } else {
-      const guildPrefix = await prefixes.get(message.guild.id);
-      if (message.content.startsWith(guildPrefix)) prefix = guildPrefix;
-    }
+    const guildPrefix = await prefixes.get(message.guild.id);
+    if (message.content.startsWith(guildPrefix)) prefix = guildPrefix;
     if (!prefix) return;
   } else {
     prefix = globalPrefix;
