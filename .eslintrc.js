@@ -1,6 +1,6 @@
 module.exports = {
   env: {
-    browser: false,
+    browser: true,
     commonjs: true,
     es2021: true
   },
@@ -13,7 +13,8 @@ module.exports = {
   rules: {
     semi: ["error", "always"],
     quotes: ["error", "double"],
-    "capitalized-comments": "never",
-    "linebreak-style": 0
+    "linebreak-style": 0,
+    camelcase: 0,
+    "no-prototype-builtins": 0
   }
 };

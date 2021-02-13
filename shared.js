@@ -1,16 +1,16 @@
 const fetch = require("node-fetch");
-//const Discord = require("discord.js");
+// const Discord = require("discord.js");
 
 module.exports = {
   statusWebhook: async (embed) => {
-    let body = {
+    const body = {
       username: process.env.instance,
-      embeds: [embed],
+      embeds: [embed]
     };
     await fetch(process.env.error_webhook, {
       method: "post",
       body: JSON.stringify(body),
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" }
     })
       .then((res) => {
         return true;
@@ -20,7 +20,7 @@ module.exports = {
       });
   },
   handleError: async (err, context = "Unknown context") => {
-    let body = {
+    const body = {
       username: process.env.instance,
       embeds: [
         {
@@ -28,15 +28,15 @@ module.exports = {
           description: "```" + err + "```",
           color: 16711680,
           author: {
-            name: "Error occurred",
-          },
-        },
-      ],
+            name: "Error occurred"
+          }
+        }
+      ]
     };
     await fetch(process.env.error_webhook, {
       method: "post",
       body: JSON.stringify(body),
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" }
     })
       .then((res) => {
         console.log("Error:");
@@ -53,13 +53,13 @@ module.exports = {
   },
   createAvatar: (user, type, animated = true) => {
     let url = "https://cdn.discordapp.com/";
-    if (type == "user") {
+    if (type === "user") {
       url += "avatars/";
-    } else if (type == "server") {
+    } else if (type === "server") {
       url += "icons/";
-    } else if (type == "banner") {
+    } else if (type === "banner") {
       url += "banners/";
-    } else if (type == "splash") {
+    } else if (type === "splash") {
       url += "splashes/";
     }
     if (user.hasOwnProperty("avatar") && user.avatar) {
@@ -88,19 +88,22 @@ module.exports = {
     return url;
   },
   hasPermission: (guild, author, perm) => {
-    if (perm == undefined || perm == null) return true;
-    if (perm == "botowner") return author.id == "131990779890630656";
-    if (perm == "guildowner")
-      return author.id == guild.owner.id || author.id == "131990779890630656";
-    if (perm == "admin")
+    if (perm === undefined || perm == null) return true;
+    if (perm === "botowner") return author.id === "131990779890630656";
+    if (perm === "guildowner") {
+      return author.id === guild.owner.id || author.id === "131990779890630656";
+    }
+    if (perm === "admin") {
       return (
-        author.id == "131990779890630656" ||
-        author.id == guild.owner.id ||
+        author.id === "131990779890630656" ||
+        author.id === guild.owner.id ||
         guild.members.get(author.id).hasPermission("ADMINISTRATOR")
       );
+    }
     return false;
   },
   getUserArg: async (message, args, client) => {
+    let user;
     if (message.mentions.users.size > 0) {
       user = message.mentions.users.first();
     } else {
@@ -130,7 +133,7 @@ module.exports = {
         {
           method: "post",
           body: "q=" + encodeURIComponent(text),
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          headers: { "Content-Type": "application/x-www-form-urlencoded" }
         }
       )
         .then((res) => res.json())
@@ -142,16 +145,72 @@ module.exports = {
           resolve({
             source: json[2].split("-")[0],
             target: target,
-            text: text,
+            text: text
           });
         })
         .catch((err) => {
-          handleError(err, "googleTranslate");
+          module.exports.handleError(err, "googleTranslate");
           reject(err);
         });
     });
   },
   createFooter: (message, latency) => {
-    return message.author.username + "#" + message.author.discriminator + " • " + (Date.now() - latency) + "ms"
+    return (
+      message.author.username +
+      "#" +
+      message.author.discriminator +
+      " • " +
+      (Date.now() - latency) +
+      "ms"
+    );
+  },
+  emoji: {
+    loading: "<a:Loading2:673157281415823384>",
+    verified: "<:verified:615479157794799626>",
+    newDiscord: "<:newDiscord:676021860575739914>"
+  },
+  timeAgo: (time) => {
+    time = Math.floor(time / 1000);
+    let seconds = parseInt(new Date().getTime() / 1000) - time;
+    if (time > parseInt(new Date().getTime() / 1000)) {
+      seconds = seconds * -1;
+    }
+    let years;
+    let days;
+    let hours;
+    let minutes;
+    if (seconds > 60) {
+      if (seconds > 3600) {
+        if (seconds > 86400) {
+          if (seconds > 31536000) {
+            years = parseInt(seconds / 31536000);
+            days = parseInt((seconds - 31536000 * years) / 86400);
+            return years + "y " + days + "d";
+          } else {
+            days = parseInt(seconds / 86400);
+            hours = parseInt((seconds - 86400 * days) / 3600);
+            return days + "d " + hours + "h";
+          }
+        } else {
+          hours = parseInt(seconds / 3600);
+          seconds = parseInt((seconds - 3600 * hours) / 60);
+          return hours + "h " + seconds + "m";
+        }
+      } else {
+        minutes = parseInt(seconds / 60);
+        seconds = parseInt(seconds - 60 * minutes);
+        return minutes + "m " + seconds + "s";
+      }
+    } else {
+      return seconds + "s";
+    }
+  },
+  toTitleCase: (str) => {
+    return str.replace(/\w\S*/g, function (txt) {
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
+  },
+  snowstamp: snowflake => {
+    return new Date(snowflake / 4194304 + 1420070400000);
   }
 };
