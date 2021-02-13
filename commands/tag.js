@@ -6,7 +6,6 @@ module.exports = {
   alias: ["tag", "t"],
   description: "View, edit, list, delete or create tags.",
   usage: "<tag name / list / delete [tag] / edit [tag]> [content ...]",
-  args: true,
   async execute (
     message,
     args,
@@ -17,66 +16,81 @@ module.exports = {
     globalPrefix,
     Tags
   ) {
+    let tagName;
+    let action;
+    let tagDescription;
     const embed = new Discord.MessageEmbed();
-    let tagName = args.shift();
-    let tagDescription = args.join(" ");
-    if (tagName === "list") {
+    if (args.length === 0) {
+      action = "list";
+    } else {
+      action = args.shift();
+      if (!["list", "delete", "info"].includes(action)) {
+        tagName = action;
+        action = null;
+      }
+    }
+    if (args.length > 1) {
+      tagDescription = args.join(" ");
+    }
+    if (action === "list") {
       const tagList = await Tags.findAll({
         attributes: ["name"],
         where: { owner: message.author.id }
       });
       const tagString = tagList.map((t) => t.name).join(", ") || "No tags set.";
       embed.setDescription(`List of tags: ${tagString}`);
-    } else if (tagName === "delete") {
+    } else if (action === "delete") {
       const rowCount = await Tags.destroy({
         where: { name: tagName, owner: message.author.id }
       });
       if (!rowCount) { embed.setDescription("That tag did not exist, or you do not own it."); } else {
         embed.setDescription("Tag deleted.");
       }
-    } else if (tagName && args.length < 1) {
+    } else if (tagName) {
       const tag = await Tags.findOne({ where: { name: tagName } });
       if (tag) {
-        tag.increment("uses");
-        const author = await client.users.fetch(tag.get("owner"));
-        embed.setAuthor(author.username + "#" + author.discriminator, createAvatar(author, "user"));
-        embed.setTimestamp(new Date(tag.get("createdAt")));
-        embed.setTitle(tag.get("name") + " • " + tag.get("uses") + " uses");
-        embed.setDescription(tag.get("description") + "\n\n*Last modified ``" + new Date(tag.get("updatedAt")) + "``*");
-      } else {
-        embed.setDescription(`Could not find tag: ${tagName}`);
-      }
-    } else if (tagName === "edit") {
-      tagName = args.shift();
-      tagDescription = args.join(" ");
-      const affectedRows = await Tags.update(
-        {
-          description: tagDescription
-        },
-        {
-          where: { name: tagName, owner: message.author.id }
+        if (tagDescription && tag.owner === message.author.id) {
+          const affectedRows = await Tags.update(
+            {
+              description: tagDescription
+            },
+            {
+              where: { name: tagName, owner: message.author.id }
+            }
+          );
+          if (affectedRows > 0) {
+            embed.setDescription(`Tag ${tagName} was edited.`);
+          } else {
+            embed.setDescription(
+                `Could not find a tag with name ${tagName}, or you do not own it.`
+            );
+          }
+        } else {
+          tag.increment("uses");
+          const author = await client.users.fetch(tag.get("owner"));
+          embed.setAuthor(author.username + "#" + author.discriminator, createAvatar(author, "user"));
+          embed.setTimestamp(new Date(tag.get("createdAt")));
+          embed.setTitle(tag.get("name") + " • " + tag.get("uses") + " uses");
+          embed.setDescription(tag.get("description") + "\n\n*Last modified ``" + new Date(tag.get("updatedAt")) + "``*");
         }
-      );
-      if (affectedRows > 0) {
-        embed.setDescription(`Tag ${tagName} was edited.`);
       } else {
-        embed.setDescription(
-          `Could not find a tag with name ${tagName}, or you do not own it.`
-        );
-      }
-    } else {
-      try {
-        const tag = await Tags.create({
-          name: tagName,
-          description: tagDescription,
-          owner: message.author.id
-        });
-        embed.setDescription(`Tag ${tag.name} added.`);
-      } catch (e) {
-        if (e.name === "SequelizeUniqueConstraintError") {
-          embed.setDescription("That tag already exists.");
+        if (tagDescription) {
+          try {
+            const tag = await Tags.create({
+              name: tagName,
+              description: tagDescription,
+              owner: message.author.id
+            });
+            embed.setDescription(`Tag ${tag.name} added.`);
+          } catch (e) {
+            if (e.name === "SequelizeUniqueConstraintError") {
+              embed.setDescription("That tag already exists.");
+            }
+            embed.setDescription("Something went wrong with adding a tag.");
+          }
+        } else {
+          embed.setDescription(`Could not find tag: ${tagName}`);
         }
-        embed.setDescription("Something went wrong with adding a tag.");
       }
     }
     embed.setFooter(
