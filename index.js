@@ -91,24 +91,24 @@ client.on("ready", async () => {
 
 client.on("message", async (message) => {
   const latency = Date.now();
-  let prefix;
-  if (message.guild) {
-    const guildPrefix = await prefixes.get(message.guild.id);
-    if (guildPrefix && guildPrefix !== null) {
-      prefix = guildPrefix;
-    }
-  } else {
-    prefix = globalPrefix;
-  }
 
   if (
-    !message.content.startsWith(prefix) ||
     message.author.bot ||
     message.webhookID ||
     message.author.id === client.user.id
   ) {
     return;
   }
+
+  let prefix = globalPrefix;
+  if (message.guild) {
+    const guildPrefix = await prefixes.get(message.guild.id);
+    if (guildPrefix && guildPrefix !== undefined && guildPrefix !== null && guildPrefix.length > 0) {
+      prefix = guildPrefix;
+    }
+  }
+
+  if (!message.content.startsWith(prefix)) return;
 
   const args = message.content.slice(prefix.length).trim().split(/ +/);
   const command = args.shift().toLowerCase();
