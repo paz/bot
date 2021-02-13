@@ -173,7 +173,7 @@ client.on("guildMemberAdd", async (member) => {
     if (user_messages && user_messages !== "disable") {
       const user_channel = guild.channels.resolveID(user_messages);
       if (!user_channel) return;
-      const embed = new Discord.MessageEmbed();
+      let embed = new Discord.MessageEmbed();
       embed.setDescription(
         join_message
           .split("%name")
@@ -183,7 +183,15 @@ client.on("guildMemberAdd", async (member) => {
           .split("%tag")
           .join(user.username + "#" + user.discriminator)
       );
+      embed.setFooter(user.id + " • " + user.username + "#" + user.discriminator);
+      embed.setTimestamp(user.createdTimestamp);
       user_channel.send(embed);
+
+      if (user.createdTimestamp > Date.now() - 1.21e+9) {
+        embed = new Discord.MessageEmbed();
+        embed.setDescription(shared.emoji.newDiscord + " Account is ``" + shared.timeAgo(user.createdTimestamp) + "`` old");
+        user_channel.send(embed);
+      }
     }
   }
 });

@@ -90,7 +90,9 @@ module.exports = {
   hasPermission: (guild, author, perm) => {
     if (perm === undefined || perm == null) return true;
     if (perm === "botowner") return author.id === "131990779890630656";
-    if (perm === "guildowner") { return author.id === guild.owner.id || author.id === "131990779890630656"; }
+    if (perm === "guildowner") {
+      return author.id === guild.owner.id || author.id === "131990779890630656";
+    }
     if (perm === "admin") {
       return (
         author.id === "131990779890630656" ||
@@ -161,5 +163,46 @@ module.exports = {
       (Date.now() - latency) +
       "ms"
     );
+  },
+  emoji: {
+    loading: "<a:Loading2:673157281415823384>",
+    verified: "<:verified:615479157794799626>",
+    newDiscord: "<:newDiscord:676021860575739914>"
+  },
+  timeAgo: (time) => {
+    time = Math.floor(time / 1000);
+    let seconds = parseInt(new Date().getTime() / 1000) - time;
+    if (time > parseInt(new Date().getTime() / 1000)) {
+      seconds = seconds * -1;
+    }
+    let years;
+    let days;
+    let hours;
+    let minutes;
+    if (seconds > 60) {
+      if (seconds > 3600) {
+        if (seconds > 86400) {
+          if (seconds > 31536000) {
+            years = parseInt(seconds / 31536000);
+            days = parseInt((seconds - 31536000 * years) / 86400);
+            return years + "y " + days + "d";
+          } else {
+            days = parseInt(seconds / 86400);
+            hours = parseInt((seconds - 86400 * days) / 3600);
+            return days + "d " + hours + "h";
+          }
+        } else {
+          hours = parseInt(seconds / 3600);
+          seconds = parseInt((seconds - 3600 * hours) / 60);
+          return hours + "h " + seconds + "m";
+        }
+      } else {
+        minutes = parseInt(seconds / 60);
+        seconds = parseInt(seconds - 60 * minutes);
+        return minutes + "m " + seconds + "s";
+      }
+    } else {
+      return seconds + "s";
+    }
   }
 };
