@@ -87,6 +87,11 @@ const Members = sequelize.define("members", {
     type: Sequelize.INTEGER,
     defaultValue: 0,
     allowNull: false
+  },
+  xp: {
+    type: Sequelize.INTEGER,
+    defaultValue: 0,
+    allowNull: false
   }
 });
 
@@ -158,12 +163,30 @@ client.on("message", async (message) => {
     );
     message.channel.send(afkEmbed);
   }
+
+  if (!cooldowns.has("xpGain")) {
+    cooldowns.set("xpGain", new Discord.Collection());
+  }
+
+  let xpGain = shared.getRandomInt(10, 50);
+  const xpTimestamps = cooldowns.get("xpGain");
+
+  if (xpTimestamps.has(message.author.id)) {
+    const xpExpirationTime = xpTimestamps.get(message.author.id) + (60 * 1000);
+    if (latency < xpExpirationTime) {
+      xpGain = 0;
+    }
+  }
+
+  xpTimestamps.set(message.author.id, latency);
+
   await Members.update(
     {
       last_active: latency,
       afk: null,
       afkMessage: null,
-      messages_count: (Member.messages_count + 1)
+      messages_count: (Member.messages_count + 1),
+      xp: (Member.xp + xpGain)
     },
     {
       where: { user_id: message.author.id, guild_id: message.guild.id }
@@ -421,14 +444,18 @@ client.on("messageDelete", async (message) => {
   }
 });
 
+// clocks
+
 async function minuteTick () {
   client.guilds.cache.forEach(async (guild) => {
     guild.channels.cache.filter(channel => (channel.type === "voice" && channel.members.size > 0)).forEach(async (channel) => {
       channel.members.forEach(async (member) => {
         const Member = (await Members.findOrCreate({ where: { user_id: member.user.id, guild_id: guild.id } }))[0].dataValues;
+        const xpGain = shared.getRandomInt(10, 50);
         await Members.update(
           {
-            voice_count: (Member.voice_count + 1)
+            voice_count: (Member.voice_count + 1),
+            xp: (Member.xp + xpGain)
           },
           { where: { user_id: member.user.id, guild_id: guild.id } }
         );
@@ -437,7 +464,6 @@ async function minuteTick () {
   });
 }
 
-minuteTick();
 setInterval(minuteTick, 60 * 1000);
 
 // login

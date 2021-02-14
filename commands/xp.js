@@ -18,7 +18,8 @@ module.exports = {
     Members,
     Member
   ) {
-    const xp = shared.calculateXp(Member.voice_count, Member.messages_count);
+    // const xp = shared.calculateXp(Member.voice_count, Member.messages_count);
+    const xp = Member.xp;
     const level = shared.calculateLevel(xp);
     const embed = new Discord.MessageEmbed();
     embed.setAuthor(message.author.username, shared.createAvatar(message.author, "user"));
