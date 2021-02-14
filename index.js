@@ -241,7 +241,7 @@ client.on("message", async (message) => {
           "This command can only be used in a guild."
         );
       }
-      if (cmd.args && !args.length) {
+      if (cmd.args && (!args.length || cmd.args !== args.length)) {
         return message.channel.send(
           "Syntax: ``" + prefix + command + " " + cmd.usage + "``"
         );

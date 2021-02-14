@@ -102,16 +102,14 @@ module.exports = {
     }
     return false;
   },
-  getUserArg: async (message, args, client) => {
+  getUserArg: async (message, args) => {
     let user;
+    const client = message.client;
     if (message.mentions.users.size > 0) {
       user = message.mentions.users.first();
     } else {
       if (module.exports.validId(args[0])) {
         user = await client.users.fetch(args[0]);
-        if (!user) {
-          return false;
-        }
       }
     }
     return user;
@@ -217,7 +215,7 @@ module.exports = {
     return ((voice_count * 7) + (message_count * 10)) + 1;
   }, */
   calculateLevel: xp => {
-    return Math.round((xp / 10000)) + 1;
+    return Math.floor((xp / 10000)) + 1;
   },
   getRandomInt: (min, max) => {
     min = Math.ceil(min);
