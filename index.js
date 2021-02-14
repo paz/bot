@@ -137,10 +137,10 @@ client.on("message", async (message) => {
   if (message.mentions.users.size > 0) {
     const user = message.mentions.users.first();
     const member = message.guild.members.resolve(user);
-    const Member = await Members.findOrCreate({ where: { user_id: user.id, guild_id: message.guild.id } });
+    const Member = (await Members.findOrCreate({ where: { user_id: user.id, guild_id: message.guild.id } }))[0].dataValues;
     if (Member.afk) {
       const afkEmbed = new Discord.MessageEmbed();
-      afkEmbed.setAuthor(member.displayName + "has been AFK for " + timeAgo(Member.afk), shared.createAvatar(member.user, "user"));
+      afkEmbed.setAuthor(member.displayName + " has been AFK for " + timeAgo(Member.afk), shared.createAvatar(member.user, "user"));
       afkEmbed.setDescription((Member.afkMessage || " "));
       afkEmbed.setFooter(
         shared.createFooter(message, latency),
