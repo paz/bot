@@ -448,8 +448,8 @@ client.on("messageDelete", async (message) => {
 
 async function minuteTick () {
   client.guilds.cache.forEach(async (guild) => {
-    guild.channels.cache.filter(channel => (channel.type === "voice" && channel.members.size > 0)).forEach(async (channel) => {
-      channel.members.forEach(async (member) => {
+    guild.channels.cache.filter(channel => (channel.type === "voice" && (channel.id !== guild.afkChannelID) && channel.members.filter(member => ((!(member.voice.deaf || member.voice.mute || member.user.bot)))).size > 1)).forEach(async (channel) => {
+      channel.members.filter(member => (!(member.voice.deaf || member.voice.mute))).forEach(async (member) => {
         const Member = (await Members.findOrCreate({ where: { user_id: member.user.id, guild_id: guild.id } }))[0].dataValues;
         const xpGain = shared.getRandomInt(10, 50);
         await Members.update(
@@ -459,6 +459,7 @@ async function minuteTick () {
           },
           { where: { user_id: member.user.id, guild_id: guild.id } }
         );
+        console.log("added " + xpGain + "xp to " + member.user.username);
       });
     });
   });
