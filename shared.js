@@ -212,5 +212,11 @@ module.exports = {
   },
   snowstamp: snowflake => {
     return new Date(snowflake / 4194304 + 1420070400000);
+  },
+  calculateXp: (voice_count, message_count) => {
+    return ((voice_count * 7) + (message_count * 10)) + 1;
+  },
+  calculateLevel: xp => {
+    return Math.round((xp / 10000)) + 1;
   }
 };
