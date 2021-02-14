@@ -33,6 +33,7 @@ for (const file of commandFiles) {
 
 // random ass functions
 const shared = require("./shared");
+const { timeAgo } = require("./shared");
 process.on("uncaughtException", (err) => shared.handleError(err));
 process.on("unhandledRejection", (err) => shared.handleError(err));
 
@@ -67,6 +68,33 @@ const Guilds = sequelize.define("guilds", {
   user_messages: { type: Sequelize.STRING, allowNull: true }
 });
 
+const Members = sequelize.define("members", {
+  user_id: {
+    type: Sequelize.STRING
+  },
+  guild_id: {
+    type: Sequelize.STRING
+  },
+  last_active: { type: Sequelize.TEXT, allowNull: true },
+  afk: { type: Sequelize.STRING, allowNull: true },
+  afkMessage: { type: Sequelize.TEXT, allowNull: true },
+  voice_count: {
+    type: Sequelize.INTEGER,
+    defaultValue: 0,
+    allowNull: false
+  },
+  messages_count: {
+    type: Sequelize.INTEGER,
+    defaultValue: 0,
+    allowNull: false
+  },
+  xp: {
+    type: Sequelize.INTEGER,
+    defaultValue: 0,
+    allowNull: false
+  }
+});
+
 const sequelize_sync_options = {
   alter: true,
   drop: false
@@ -77,6 +105,9 @@ const sequelize_sync_options = {
 client.on("ready", async () => {
   Tags.sync(sequelize_sync_options);
   Guilds.sync(sequelize_sync_options);
+  Members.sync(sequelize_sync_options);
+
+  // Members.belongsTo(Guilds, { foreignKey: "guild_id", targetKey: "id" });
 
   console.log(
     `Logged in as ${client.user.tag}!
@@ -100,6 +131,69 @@ client.on("message", async (message) => {
     return;
   }
 
+  // Normal message events
+
+  // Is first mention AFK
+  if (message.mentions.users.size > 0) {
+    const user = message.mentions.users.first();
+    const member = message.guild.members.resolve(user);
+    const Member = await Members.findOrCreate({ where: { user_id: user.id, guild_id: message.guild.id } });
+    if (Member.afk) {
+      const afkEmbed = new Discord.MessageEmbed();
+      afkEmbed.setAuthor(member.displayName + "has been AFK for " + timeAgo(Member.afk), shared.createAvatar(member.user, "user"));
+      afkEmbed.setDescription((Member.afkMessage || " "));
+      afkEmbed.setFooter(
+        shared.createFooter(message, latency),
+        shared.createAvatar(message.author, "user")
+      );
+      message.channel.send(afkEmbed);
+    }
+  }
+
+  // Is author AFK
+  const Member = (await Members.findOrCreate({ where: { user_id: message.author.id, guild_id: message.guild.id } }))[0].dataValues;
+  if (Member.afk) {
+    const afkEmbed = new Discord.MessageEmbed();
+    const member = message.guild.members.resolve(Member.user_id);
+    afkEmbed.setAuthor(member.displayName + " is no longer AFK", shared.createAvatar(member.user, "user"));
+    afkEmbed.setDescription("was AFK for " + timeAgo(Member.afk));
+    afkEmbed.setFooter(
+      shared.createFooter(message, latency),
+      shared.createAvatar(message.author, "user")
+    );
+    message.channel.send(afkEmbed);
+  }
+
+  if (!cooldowns.has("xpGain")) {
+    cooldowns.set("xpGain", new Discord.Collection());
+  }
+
+  let xpGain = shared.getRandomInt(10, 50);
+  const xpTimestamps = cooldowns.get("xpGain");
+
+  if (xpTimestamps.has(message.author.id)) {
+    const xpExpirationTime = xpTimestamps.get(message.author.id) + (60 * 1000);
+    if (latency < xpExpirationTime) {
+      xpGain = 0;
+    }
+  }
+
+  xpTimestamps.set(message.author.id, latency);
+
+  await Members.update(
+    {
+      last_active: latency,
+      afk: null,
+      afkMessage: null,
+      messages_count: (Member.messages_count + 1),
+      xp: (Member.xp + xpGain)
+    },
+    {
+      where: { user_id: message.author.id, guild_id: message.guild.id }
+    }
+  );
+
+  // Commands
   let prefix = globalPrefix;
   if (message.guild) {
     const guildPrefix = await prefixes.get(message.guild.id);
@@ -152,6 +246,7 @@ client.on("message", async (message) => {
           "Syntax: ``" + prefix + command + " " + cmd.usage + "``"
         );
       }
+
       cmd.execute(
         message,
         args,
@@ -161,7 +256,9 @@ client.on("message", async (message) => {
         prefixes,
         globalPrefix,
         Tags,
-        Guilds
+        Guilds,
+        Members,
+        Member
       );
     }
   } catch (error) {
@@ -346,6 +443,29 @@ client.on("messageDelete", async (message) => {
     );
   }
 });
+
+// clocks
+
+async function minuteTick () {
+  client.guilds.cache.forEach(async (guild) => {
+    guild.channels.cache.filter(channel => (channel.type === "voice" && (channel.id !== guild.afkChannelID) && channel.members.filter(member => ((!(member.voice.deaf || member.voice.mute || member.user.bot)))).size > 1)).forEach(async (channel) => {
+      channel.members.filter(member => (!(member.voice.deaf || member.voice.mute))).forEach(async (member) => {
+        const Member = (await Members.findOrCreate({ where: { user_id: member.user.id, guild_id: guild.id } }))[0].dataValues;
+        const xpGain = shared.getRandomInt(10, 50);
+        await Members.update(
+          {
+            voice_count: (Member.voice_count + 1),
+            xp: (Member.xp + xpGain)
+          },
+          { where: { user_id: member.user.id, guild_id: guild.id } }
+        );
+        console.log("added " + xpGain + "xp to " + member.user.username);
+      });
+    });
+  });
+}
+
+setInterval(minuteTick, 60 * 1000);
 
 // login
 client.login(process.env.token);
