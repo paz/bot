@@ -6,13 +6,13 @@ module.exports = {
   description: "List of all commands",
   usage: "[command]",
   cooldown: 3,
-  execute(message, args, latency, commands) {
-    let embed = new Discord.MessageEmbed();
+  execute (message, args, latency, commands) {
+    const embed = new Discord.MessageEmbed();
     embed.setAuthor("Help");
     commands.forEach(command => {
-      embed.addField("``"+command.alias[0]+"`` "+command.usage, command.description)
-    })
+      embed.addField("``" + command.alias[0] + "`` " + command.usage, command.description);
+    });
     embed.setFooter(shared.createFooter(message, latency), shared.createAvatar(message.author, "user"));
     message.channel.send(embed);
-  },
+  }
 };

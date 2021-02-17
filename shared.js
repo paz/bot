@@ -1,5 +1,6 @@
 const fetch = require("node-fetch");
 const Sequelize = require("sequelize");
+const startTimestamp = Date.now();
 // const Discord = require("discord.js");
 
 module.exports = {
@@ -223,7 +224,8 @@ module.exports = {
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
   },
-  rankQuery: [Sequelize.literal("DENSE_RANK() OVER (ORDER BY `xp` DESC)"), "rank"]
+  rankQuery: [Sequelize.literal("DENSE_RANK() OVER (ORDER BY `xp` DESC)"), "rank"],
+  startTimestamp: startTimestamp
 };
 /*
 
