@@ -167,7 +167,21 @@ module.exports = {
   emoji: {
     loading: "<a:Loading2:673157281415823384>",
     verified: "<:verified:615479157794799626>",
-    newDiscord: "<:newDiscord:676021860575739914>"
+    newDiscord: "<:newDiscord:676021860575739914>",
+    richPresence: "<:richpresence:615534975164612611>",
+    mobile_online: "<:mobile_online:811533487425060874>",
+    discord_employee: "<:discordstaff:617236856177688576>",
+    partner: "<:partner:615898722043428874>",
+    hypesquad: "<:hypesquadevents:615928854711631894>",
+    bot: "<:bottag1:615840427735515145>",
+    early_supporter: "<:earlysupporter:615925899899961368>",
+    nitro: "<:nitro:615481694048354304>",
+    bughunter: "<:bughunter:615899119436824577>",
+    brilliance: "<:brilliance:615893823272386579>",
+    bravery: "<:bravery:615893383541686277>",
+    balance: "<:balance:615893023032868885>",
+    booster: "<:boosting:615864877915045908>",
+    join: "<:join:615543062520660006>"
   },
   timeAgo: (time) => {
     time = Math.floor(time / 1000);
@@ -225,7 +239,14 @@ module.exports = {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   },
   rankQuery: [Sequelize.literal("DENSE_RANK() OVER (ORDER BY `xp` DESC)"), "rank"],
-  startTimestamp: startTimestamp
+  startTimestamp: startTimestamp,
+  statusImages: {
+    online: "https://cdn.discordapp.com/emojis/615546049217560608.png?v=1",
+    offline: "https://cdn.discordapp.com/emojis/615546102955114496.png?v=1",
+    invisible: "https://cdn.discordapp.com/emojis/615546102955114496.png?v=1",
+    idle: "https://cdn.discordapp.com/emojis/615546077969383434.png?v=1",
+    dnd: "https://cdn.discordapp.com/emojis/615546091240161281.png?v=1"
+  }
 };
 /*
 

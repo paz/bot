@@ -30,8 +30,11 @@ app.get("/user/:id", async (req, res, next) => {
 // discord
 const Discord = require("discord.js");
 const client = new Discord.Client({
-  properties: {
-    $browser: "Discord iOS"
+  ws: {
+    properties: {
+      $browser: "Discord iOS",
+      $device: "Discord iOS"
+    }
   }
 });
 const Keyv = require("keyv");
@@ -142,7 +145,6 @@ client.on("ready", async () => {
   // Members.belongsTo(Guilds, { foreignKey: "guild_id", targetKey: "id" });
 
   client.user.setPresence({
-    status: "online",
     activity: {
       name: "Clash of Clans",
       type: "COMPETING"
