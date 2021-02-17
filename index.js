@@ -39,16 +39,7 @@ const client = new Discord.Client({
 });
 const Keyv = require("keyv");
 const Sequelize = require("sequelize");
-const sequelize = new Sequelize(
-  process.env.db_name,
-  process.env.db_user,
-  process.env.db_pass,
-  {
-    host: process.env.db_host,
-    dialect: "mariadb",
-    logging: false
-  }
-);
+const sequelize = shared.sequelize;
 
 const globalPrefix = ",";
 const prefixes = new Keyv(process.env.keyv, { namespace: "prefixes" });
@@ -126,6 +117,18 @@ const Members = sequelize.define("members", {
   }
 });
 
+const Roles = sequelize.define("roles", {
+  role_id: {
+    type: Sequelize.STRING
+  },
+  guild_id: {
+    type: Sequelize.STRING
+  },
+  xp: {
+    type: Sequelize.INTEGER
+  }
+});
+
 const sequelize_sync_options = {
   alter: true,
   drop: false
@@ -137,11 +140,13 @@ client.on("ready", async () => {
   Tags.sync(sequelize_sync_options);
   Guilds.sync(sequelize_sync_options);
   Members.sync(sequelize_sync_options);
+  Roles.sync(sequelize_sync_options);
 
   app.listen(process.env.web_port, "localhost", () => {
     console.log("Web server listening on " + process.env.web_port);
   });
 
+  // Not using relationship since there is no guarantee the guild actually exists
   // Members.belongsTo(Guilds, { foreignKey: "guild_id", targetKey: "id" });
 
   client.user.setPresence({
@@ -152,14 +157,14 @@ client.on("ready", async () => {
   });
 
   console.log(
-    `Logged in as ${client.user.tag}!
-    Serving ${client.guilds.cache.size} guilds & ${client.users.cache.size} users`
+    `Logged in as ${client.user.tag}!` +
+    `\nServing ${client.guilds.cache.size} guilds & ${client.users.cache.size} users`
   );
   if (process.env.instance.split("test").length === 1) {
     const readyEmbed = new Discord.MessageEmbed();
     readyEmbed.setTitle(process.env.instance + " is now online");
-    readyEmbed.setDescription(`Logged in as <@${client.user.id}>
-    Serving ${client.guilds.cache.size} guilds & ${client.users.cache.size} users`);
+    readyEmbed.setDescription(`Logged in as <@${client.user.id}>` +
+    `\nServing ${client.guilds.cache.size} guilds & ${client.users.cache.size} users`);
     shared.statusWebhook(readyEmbed);
   }
 });
@@ -237,6 +242,17 @@ client.on("message", async (message) => {
     }
   );
 
+  // Level ups
+  shared.roleQuery(message.guild.id).then(roles => {
+    roles.forEach(role => {
+      if (Member.xp >= role.xp && !message.member.roles.cache.has(role.role_id)) {
+        message.member.roles.add(role.role_id);
+      } else if (Member.xp < role.xp && message.member.roles.cache.has(role.role_id)) {
+        message.member.roles.remove(role.role_id);
+      }
+    });
+  });
+
   // Commands
   let prefix = globalPrefix;
   if (message.guild) {
@@ -245,6 +261,8 @@ client.on("message", async (message) => {
       prefix = guildPrefix;
     }
   }
+
+  if ((message.content.split("<@" + client.user.id + ">").join("").split("<@!" + client.user.id + ">").join("")) && message.mentions.users.size > 0 && message.mentions.users.first().id === client.user.id) message.channel.send("My prefix is " + prefix);
 
   if (!message.content.startsWith(prefix)) return;
 
@@ -302,7 +320,8 @@ client.on("message", async (message) => {
         Tags,
         Guilds,
         Members,
-        Member
+        Member,
+        Roles
       );
     }
   } catch (error) {

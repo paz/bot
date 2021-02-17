@@ -1,5 +1,4 @@
 const Discord = require("discord.js");
-const { calculateLevel } = require("../shared");
 const shared = require("../shared");
 
 module.exports = {
@@ -27,10 +26,17 @@ module.exports = {
     });
     let i = 1;
     const fields = [];
+    const roles = await shared.roleQuery(message.guild.id);
     // const yourRank =  "\n\n**Your Rank**\n #" + Member.rank + " • " + Member.xp + "xp • Lvl. " + calculateLevel(Member.xp);
     topMembers.forEach(topMember => {
       topMember = topMember.dataValues;
-      fields.push(i + "    <@" + topMember.user_id + ">     " + topMember.xp + "xp    Lvl. " + calculateLevel(topMember.xp));
+      let level = 0;
+      roles.forEach(role => {
+        if (topMember.xp >= role.xp) {
+          level = role.rank;
+        }
+      });
+      fields.push(i + "    <@" + topMember.user_id + ">     " + topMember.xp + "xp    Lvl. " + level);
       i++;
     });
     embed.setTitle("Top Members of " + message.guild.name);

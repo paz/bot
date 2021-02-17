@@ -1,5 +1,15 @@
 const fetch = require("node-fetch");
 const Sequelize = require("sequelize");
+const sequelize = new Sequelize(
+  process.env.db_name,
+  process.env.db_user,
+  process.env.db_pass,
+  {
+    host: process.env.db_host,
+    dialect: "mariadb",
+    logging: false
+  }
+);
 const startTimestamp = Date.now();
 // const Discord = require("discord.js");
 
@@ -229,10 +239,10 @@ module.exports = {
   },
   /* calculateXp: (voice_count, message_count) => {
     return ((voice_count * 7) + (message_count * 10)) + 1;
-  }, */
+  },
   calculateLevel: xp => {
     return Math.floor((xp / 10000)) + 1;
-  },
+  }, */
   getRandomInt: (min, max) => {
     min = Math.ceil(min);
     max = Math.floor(max);
@@ -246,21 +256,71 @@ module.exports = {
     invisible: "https://cdn.discordapp.com/emojis/615546102955114496.png?v=1",
     idle: "https://cdn.discordapp.com/emojis/615546077969383434.png?v=1",
     dnd: "https://cdn.discordapp.com/emojis/615546091240161281.png?v=1"
-  }
+  },
+  leaderboardQuery: (guild, user = null) => {
+    let userQuery = "";
+    const replacements = { guild_id: guild };
+    if (user) {
+      userQuery = " AND r.user_id = :user_id";
+      replacements.user_id = user;
+    }
+    return sequelize.query(
+      `SELECT * FROM (
+
+        SELECT id, user_id, guild_id, xp, rank from
+       (
+            SELECT id, user_id, guild_id, xp, @tmprank := @tmprank + 1 AS rank
+           FROM members
+           CROSS JOIN (SELECT @tmprank := 0) init 
+           WHERE guild_id = :guild_id
+           ORDER BY xp DESC
+       )  rt
+       ORDER BY rank
+   ) AS r
+   WHERE r.guild_id = :guild_id` + userQuery, {
+        replacements: replacements,
+        type: Sequelize.QueryTypes.SELECT
+      });
+  },
+  roleQuery: (guild, role = null) => {
+    let userQuery = "";
+    const replacements = { guild_id: guild };
+    if (role) {
+      userQuery = " AND r.role_id = :role_id";
+      replacements.role_id = role;
+    }
+    return sequelize.query(
+      `SELECT * FROM (
+
+        SELECT id, role_id, guild_id, xp, rank from
+       (
+            SELECT id, role_id, guild_id, xp, @tmprank := @tmprank + 1 AS rank
+           FROM roles
+           CROSS JOIN (SELECT @tmprank := 0) init 
+           WHERE guild_id = :guild_id
+           ORDER BY xp ASC
+       )  rt
+       ORDER BY rank
+   ) AS r
+   WHERE r.guild_id = :guild_id` + userQuery, {
+        replacements: replacements,
+        type: Sequelize.QueryTypes.SELECT
+      });
+  },
+  sequelize: sequelize
 };
 /*
-
-SELECT rank FROM (
+SELECT * FROM (
 
      SELECT id, user_id, guild_id, xp, rank from
     (
-        SELECT id, user_id, guild_id, xp, @tmprank := @tmprank + 1 AS rank
+         SELECT id, user_id, guild_id, xp, @tmprank := @tmprank + 1 AS rank
         FROM members
         CROSS JOIN (SELECT @tmprank := 0) init
+        WHERE guild_id = "743950977014693960"
         ORDER BY xp DESC
     )  rt
     ORDER BY rank
 ) AS r
-WHERE r.user_id = "131990779890630656" AND r.guild_id = "582141348757635084";
-
+WHERE r.user_id = ""
 */

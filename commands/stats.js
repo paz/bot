@@ -1,6 +1,7 @@
 const Discord = require("discord.js");
 const pidusage = require("pidusage");
 const prettyBytes = require("pretty-bytes");
+const dayjs = require("dayjs");
 const shared = require("../shared");
 
 module.exports = {
@@ -19,6 +20,7 @@ module.exports = {
       embed.addField("Uptime", shared.timeAgo(shared.startTimestamp), true);
       embed.addField("Users", message.client.users.cache.size, true);
       embed.addField("Guilds", message.client.guilds.cache.size, true);
+      embed.addField("Timezone", dayjs().format("[UTC]Z"), true);
       embed.setFooter(shared.createFooter(message, latency), shared.createAvatar(message.author, "user"));
       message.channel.send(embed);
     });
