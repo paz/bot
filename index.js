@@ -142,6 +142,7 @@ client.on("ready", async () => {
     console.log("Web server listening on " + process.env.web_port);
   });
 
+  // Not using relationship since there is no guarantee the guild actually exists
   // Members.belongsTo(Guilds, { foreignKey: "guild_id", targetKey: "id" });
 
   client.user.setPresence({
@@ -152,14 +153,14 @@ client.on("ready", async () => {
   });
 
   console.log(
-    `Logged in as ${client.user.tag}!
-    Serving ${client.guilds.cache.size} guilds & ${client.users.cache.size} users`
+    `Logged in as ${client.user.tag}!` +
+    `Serving ${client.guilds.cache.size} guilds & ${client.users.cache.size} users`
   );
   if (process.env.instance.split("test").length === 1) {
     const readyEmbed = new Discord.MessageEmbed();
     readyEmbed.setTitle(process.env.instance + " is now online");
-    readyEmbed.setDescription(`Logged in as <@${client.user.id}>
-    Serving ${client.guilds.cache.size} guilds & ${client.users.cache.size} users`);
+    readyEmbed.setDescription(`Logged in as <@${client.user.id}>` +
+    `Serving ${client.guilds.cache.size} guilds & ${client.users.cache.size} users`);
     shared.statusWebhook(readyEmbed);
   }
 });
