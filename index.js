@@ -416,6 +416,14 @@ client.on("guildMemberRemove", async (member) => {
           .join(executor.id)
           .split("%reason")
           .join(kickReason);
+      } else {
+        message = message
+          .split("%executedBy")
+          .join("")
+          .split("%executorId")
+          .join("")
+          .split("%reason")
+          .join("none");
       }
       embed.setDescription(message);
       embed.setThumbnail(shared.createAvatar(user, "user"));
