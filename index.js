@@ -1,5 +1,25 @@
 require("dotenv").config();
 const fs = require("fs");
+const shared = require("./shared");
+
+// web server
+const express = require("express");
+const app = express();
+
+app.get("/user/:id", async (req, res, next) => {
+  const { id } = req.params;
+  if (!shared.validId(id)) return res.send({ error: "Invalid id" });
+  const user = await client.users.resolve(id);
+  if (!user) return res.send({ error: "Invalid user" });
+  console.log(user);
+  return res.send({
+    id: user.id,
+    username: user.username,
+    discriminator: user.discriminator,
+    avatar: user.avatar,
+    avatarURL: shared.createAvatar(user, "user")
+  });
+});
 
 // discord
 const Discord = require("discord.js");
@@ -32,7 +52,6 @@ for (const file of commandFiles) {
 }
 
 // random ass functions
-const shared = require("./shared");
 const { timeAgo } = require("./shared");
 process.on("uncaughtException", (err) => shared.handleError(err));
 process.on("unhandledRejection", (err) => shared.handleError(err));
@@ -106,6 +125,10 @@ client.on("ready", async () => {
   Tags.sync(sequelize_sync_options);
   Guilds.sync(sequelize_sync_options);
   Members.sync(sequelize_sync_options);
+
+  app.listen(process.env.web_port, 'localhost', () => {
+    console.log("Web server listening on " + process.env.web_port);
+  });
 
   // Members.belongsTo(Guilds, { foreignKey: "guild_id", targetKey: "id" });
 
