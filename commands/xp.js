@@ -25,20 +25,19 @@ module.exports = {
     if (args.length > 0) {
       target = await shared.getUserArg(message, args);
       if (!target || target.bot) return message.channel.send("Invalid target");
-      targetMember = (await Members.findOrCreate({ where: { user_id: target.id, guild_id: message.guild.id } }))[0].dataValues;
-      targetName = "<@" + target.id + "> has";
+      targetMember = (await Members.findOrCreate({ attributes: ["user_id", "xp", shared.rankQuery], where: { user_id: target.id, guild_id: message.guild.id } }))[0].dataValues;
+      targetName = "<@" + target.id + "> is";
       xp = targetMember.xp;
     } else {
       targetMember = Member;
       target = message.author;
-      targetName = "You have";
+      targetName = "You are";
       xp = targetMember.xp;
     }
     const level = shared.calculateLevel(xp);
     const embed = new Discord.MessageEmbed();
-    embed.setAuthor(target.username, shared.createAvatar(target, "user"));
-    embed.setDescription(targetName + " ``" + xp + "`` xp\n" +
-                         targetName + " level ``" + level + "``");
+    embed.setAuthor(target.username /* + " • Rank #" + targetMember.rank */, shared.createAvatar(target, "user"));
+    embed.setDescription(targetName + " level ``" + level + "`` with ``" + xp + "`` xp");
     embed.setFooter(
       shared.createFooter(message, latency),
       shared.createAvatar(message.author, "user")

@@ -151,7 +151,7 @@ client.on("message", async (message) => {
   }
 
   // Is author AFK
-  const Member = (await Members.findOrCreate({ where: { user_id: message.author.id, guild_id: message.guild.id } }))[0].dataValues;
+  const Member = (await Members.findOrCreate({ /* attributes: ["user_id", "afk", "messages_count", "xp", shared.rankQuery], */ where: { user_id: message.author.id, guild_id: message.guild.id } }))[0].dataValues;
   if (Member.afk) {
     const afkEmbed = new Discord.MessageEmbed();
     const member = message.guild.members.resolve(Member.user_id);
@@ -350,6 +350,14 @@ client.on("guildBanAdd", async (guild, user) => {
           .join(executor.id)
           .split("%reason")
           .join(banReason);
+      } else {
+        ban_message = ban_message
+          .split("%executedBy")
+          .join("")
+          .split("%executorId")
+          .join("")
+          .split("%reason")
+          .join("none");
       }
       embed.setDescription(ban_message);
       embed.setThumbnail(shared.createAvatar(user, "user"));
@@ -408,6 +416,14 @@ client.on("guildMemberRemove", async (member) => {
           .join(executor.id)
           .split("%reason")
           .join(kickReason);
+      } else {
+        message = message
+          .split("%executedBy")
+          .join("")
+          .split("%executorId")
+          .join("")
+          .split("%reason")
+          .join("none");
       }
       embed.setDescription(message);
       embed.setThumbnail(shared.createAvatar(user, "user"));
@@ -459,7 +475,6 @@ async function minuteTick () {
           },
           { where: { user_id: member.user.id, guild_id: guild.id } }
         );
-        console.log("added " + xpGain + "xp to " + member.user.username);
       });
     });
   });

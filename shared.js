@@ -1,4 +1,5 @@
 const fetch = require("node-fetch");
+const Sequelize = require("sequelize");
 // const Discord = require("discord.js");
 
 module.exports = {
@@ -221,5 +222,22 @@ module.exports = {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
+  },
+  rankQuery: [Sequelize.literal("DENSE_RANK() OVER (ORDER BY `xp` DESC)"), "rank"]
 };
+/*
+
+SELECT rank FROM (
+
+     SELECT id, user_id, guild_id, xp, rank from
+    (
+        SELECT id, user_id, guild_id, xp, @tmprank := @tmprank + 1 AS rank
+        FROM members
+        CROSS JOIN (SELECT @tmprank := 0) init
+        ORDER BY xp DESC
+    )  rt
+    ORDER BY rank
+) AS r
+WHERE r.user_id = "131990779890630656" AND r.guild_id = "582141348757635084";
+
+*/

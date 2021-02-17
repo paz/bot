@@ -5,7 +5,7 @@ const shared = require("../shared");
 module.exports = {
   alias: ["xptop", "top", "leaderboard"],
   description: "See the top users in the server",
-  usage: "",
+  usage: "[page]",
   async execute (
     message,
     args,
@@ -27,12 +27,13 @@ module.exports = {
     });
     let i = 1;
     const fields = [];
+    // const yourRank =  "\n\n**Your Rank**\n #" + Member.rank + " • " + Member.xp + "xp • Lvl. " + calculateLevel(Member.xp);
     topMembers.forEach(topMember => {
       topMember = topMember.dataValues;
       fields.push(i + "    <@" + topMember.user_id + ">     " + topMember.xp + "xp    Lvl. " + calculateLevel(topMember.xp));
       i++;
     });
-    embed.setTitle("Top Members of "+message.guild.name);
+    embed.setTitle("Top Members of " + message.guild.name);
     embed.setDescription(fields.join("\n"));
     embed.setFooter(
       shared.createFooter(message, latency),
