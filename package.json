@@ -26,6 +26,7 @@
     "discord.js": "^12.5.1",
     "dotenv": "^8.2.0",
     "erlpack": "^0.1.3",
+    "express": "^4.17.1",
     "keyv": "^4.0.3",
     "libsodium-wrappers": "^0.7.9",
     "mariadb": "^2.5.2",
