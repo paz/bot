@@ -262,7 +262,7 @@ client.on("message", async (message) => {
     }
   }
 
-  if ((message.content.split("<@" + client.user.id + ">").join("").split("<@!" + client.user.id + ">").join("")) && message.mentions.users.size > 0 && message.mentions.users.first().id === client.user.id) message.channel.send("My prefix is " + prefix)
+  if ((message.content.split("<@" + client.user.id + ">").join("").split("<@!" + client.user.id + ">").join("")) && message.mentions.users.size > 0 && message.mentions.users.first().id === client.user.id) message.channel.send("My prefix is " + prefix);
 
   if (!message.content.startsWith(prefix)) return;
 
