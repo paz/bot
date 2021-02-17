@@ -83,7 +83,7 @@ module.exports = {
         }
       }
 
-      embed.addField(shared.emoji.richPresence + " " + statusTitle, value, true);
+      embed.addField(shared.emoji.richPresence + " " + statusTitle, value);
     });
 
     if (spotifyImage) embed.setImage(spotifyImage.replace("spotify:", "https://i.scdn.co/image/"));
