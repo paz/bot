@@ -126,7 +126,7 @@ client.on("ready", async () => {
   Guilds.sync(sequelize_sync_options);
   Members.sync(sequelize_sync_options);
 
-  app.listen(process.env.web_port, 'localhost', () => {
+  app.listen(process.env.web_port, "localhost", () => {
     console.log("Web server listening on " + process.env.web_port);
   });
 
