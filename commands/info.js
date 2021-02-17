@@ -1,5 +1,7 @@
 const Discord = require("discord.js");
+const dayjs = require("dayjs");
 const shared = require("../shared");
+const { createAvatar } = require("../shared");
 
 module.exports = {
   alias: ["info", "user", "lookup"],
@@ -15,7 +17,7 @@ module.exports = {
       user = message.author;
     }
     if (!user) { return message.channel.send("invalid user"); };
-    let member = await message.guild.members.resolve(user.id);
+    const member = await message.guild.members.resolve(user.id);
 
     const avatar = shared.createAvatar(user, "user");
     embed.setAuthor(user.username + "#" + user.discriminator, shared.statusImages[user.presence.status], "https://dscrd.co/" + user.id);
@@ -41,13 +43,20 @@ module.exports = {
       if (user.flags.has("VERIFIED_DEVELOPER")) badges.push(shared.emoji.verified);
     }
 
-    embed.addField("🗓️ Account Created", user.createdTimestamp + "\n``" + shared.timeAgo(user.createdTimestamp) + "``", true);
+    embed.addField("🗓️ Account Created",
+      dayjs(user.createdTimestamp).format("DD/MM/YYYY HH:mm") +
+    "\n``" + shared.timeAgo(user.createdTimestamp) + "``", true);
+
+    const animatedAvatar = (createAvatar(user, "user").split(".gif").length > 1);
 
     let nickname = "";
     if (member) {
       if (member.displayName !== user.username) nickname = " • " + member.displayName;
-      embed.addField(shared.emoji.join + " Joined Guild", member.joinedTimestamp + "\n``" + shared.timeAgo(member.joinedTimestamp) + "``", true);
-      if (member.premiumSinceTimestamp) badges.push(shared.emoji.nitro);
+      embed.addField(
+        shared.emoji.join + " Joined Guild",
+        dayjs(member.joinedTimestamp).format("DD/MM/YYYY HH:mm") +
+        "\n``" + shared.timeAgo(member.joinedTimestamp) + "``", true);
+      if ((member.premiumSinceTimestamp !== null && member.premiumSinceTimestamp !== 0) || animatedAvatar) badges.push(shared.emoji.nitro);
     }
 
     embed.setDescription("ID: ``" + user.id + "``" + nickname + " • [Avatar](" + avatar + "?size=2048)\n" + badges.join(" ") + "\n\n");
