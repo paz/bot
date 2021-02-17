@@ -29,7 +29,14 @@ app.get("/user/:id", async (req, res, next) => {
 
 // discord
 const Discord = require("discord.js");
-const client = new Discord.Client();
+const client = new Discord.Client({
+  ws: {
+    properties: {
+      $browser: "Discord iOS",
+      $device: "Discord iOS"
+    }
+  }
+});
 const Keyv = require("keyv");
 const Sequelize = require("sequelize");
 const sequelize = new Sequelize(
@@ -58,7 +65,6 @@ for (const file of commandFiles) {
 }
 
 // random ass functions
-const { timeAgo } = require("./shared");
 process.on("uncaughtException", (err) => shared.handleError(err));
 process.on("unhandledRejection", (err) => shared.handleError(err));
 
@@ -138,15 +144,24 @@ client.on("ready", async () => {
 
   // Members.belongsTo(Guilds, { foreignKey: "guild_id", targetKey: "id" });
 
+  client.user.setPresence({
+    activity: {
+      name: "Clash of Clans",
+      type: "COMPETING"
+    }
+  });
+
   console.log(
     `Logged in as ${client.user.tag}!
     Serving ${client.guilds.cache.size} guilds & ${client.users.cache.size} users`
   );
-  const readyEmbed = new Discord.MessageEmbed();
-  readyEmbed.setTitle(process.env.instance + " is now online");
-  readyEmbed.setDescription(`Logged in as <@${client.user.id}>
-  Serving ${client.guilds.cache.size} guilds & ${client.users.cache.size} users`);
-  shared.statusWebhook(readyEmbed);
+  if (process.env.instance.split("test").length === 1) {
+    const readyEmbed = new Discord.MessageEmbed();
+    readyEmbed.setTitle(process.env.instance + " is now online");
+    readyEmbed.setDescription(`Logged in as <@${client.user.id}>
+    Serving ${client.guilds.cache.size} guilds & ${client.users.cache.size} users`);
+    shared.statusWebhook(readyEmbed);
+  }
 });
 
 client.on("message", async (message) => {
@@ -169,7 +184,7 @@ client.on("message", async (message) => {
     const Member = (await Members.findOrCreate({ where: { user_id: user.id, guild_id: message.guild.id } }))[0].dataValues;
     if (Member.afk) {
       const afkEmbed = new Discord.MessageEmbed();
-      afkEmbed.setAuthor(member.displayName + " has been AFK for " + timeAgo(Member.afk), shared.createAvatar(member.user, "user"));
+      afkEmbed.setAuthor(member.displayName + " has been AFK for " + shared.timeAgo(Member.afk), shared.createAvatar(member.user, "user"));
       afkEmbed.setDescription((Member.afkMessage || " "));
       afkEmbed.setFooter(
         shared.createFooter(message, latency),
@@ -185,7 +200,7 @@ client.on("message", async (message) => {
     const afkEmbed = new Discord.MessageEmbed();
     const member = message.guild.members.resolve(Member.user_id);
     afkEmbed.setAuthor(member.displayName + " is no longer AFK", shared.createAvatar(member.user, "user"));
-    afkEmbed.setDescription("was AFK for " + timeAgo(Member.afk));
+    afkEmbed.setDescription("was AFK for " + shared.timeAgo(Member.afk));
     afkEmbed.setFooter(
       shared.createFooter(message, latency),
       shared.createAvatar(message.author, "user")
