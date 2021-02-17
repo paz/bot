@@ -6,6 +6,11 @@ const shared = require("./shared");
 const express = require("express");
 const app = express();
 
+app.use("/", (req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "slackers.pw");
+  next();
+});
+
 app.get("/user/:id", async (req, res, next) => {
   const { id } = req.params;
   if (!shared.validId(id)) return res.send({ error: "Invalid id" });
