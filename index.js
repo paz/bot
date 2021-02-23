@@ -151,7 +151,7 @@ client.on("ready", async () => {
 
   client.user.setPresence({
     activity: {
-      name: "Clash of Clans",
+      name: "ඞ Among Us",
       type: "COMPETING"
     }
   });
