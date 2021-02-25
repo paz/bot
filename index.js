@@ -15,7 +15,7 @@ app.use("/", (req, res, next) => {
 app.get("/user/:id", async (req, res, next) => {
   const { id } = req.params;
   if (!shared.validId(id)) return res.send({ error: "Invalid id" });
-  const user = await client.users.resolve(id);
+  const user = await client.users.fetch(id);
   if (!user) return res.send({ error: "Invalid user" });
   console.log(user);
   return res.send({
