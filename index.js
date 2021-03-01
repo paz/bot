@@ -372,7 +372,7 @@ client.on("guildMemberAdd", async (member) => {
   }
 });
 
-const auditLogDelay = 2500;
+const auditLogDelay = 4000;
 
 client.on("guildBanAdd", async (guild, user) => {
   const fetchedLogs = await guild.fetchAuditLogs({

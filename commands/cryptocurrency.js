@@ -22,7 +22,7 @@ module.exports = {
         return message.channel.send("Invalid currency");
       }
       embed.setTitle(coinName + " (US$)");
-      embed.addField("Information", "Price: ``$" + coin.price + "``\nHighest today: ``$" + coin.high + "``", true);
+      embed.addField("Information", "Price: ``$" + coin.price + "``\nHighest ever: ``$" + coin.high + "``", true);
       embed.addField("Stats",
         "Last 7d: `` " + coin["7d"].price_change_pct * 100 +
         "%``\nLast 24h: ``" + coin["1d"].price_change_pct * 100 +
