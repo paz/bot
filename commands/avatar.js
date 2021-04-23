@@ -16,8 +16,7 @@ module.exports = {
     if (!user) { return message.channel.send("invalid user"); };
     const avatar = shared.createAvatar(user, "user");
     embed.setTitle("``" + user.username + "``'s avatar");
-    embed.setImage(avatar);
-    embed.setDescription("[Full Resolution](" + avatar + "?size=2048)");
+    embed.setImage(avatar + "?size=2048");
     embed.setFooter(shared.createFooter(message, latency), shared.createAvatar(message.author, "user"));
     message.channel.send(embed);
   }
