@@ -4,9 +4,10 @@ const { Menu } = require("discord.js-menu");
 const shared = require("../shared");
 
 module.exports = {
-  alias: ["booru", "danbooru"],
+  alias: ["booru", "danbooru", "rule34", "r34"],
   description: "Search booru",
   usage: "[site] <query>",
+  cooldown: 5,
   async execute (message,
     args,
     latency,
@@ -22,14 +23,18 @@ module.exports = {
     command) {
     const pages = [];
     let site = "danbooru";
-    for (let Site in Booru.sites) {
-      Site = Booru.sites[Site];
-      if (Site.aliases.includes(command)) {
+    let Site;
+    for (let Sites in Booru.sites) {
+      Sites = Booru.sites[Site];
+      if (Sites.aliases.includes(command)) {
         site = command;
-      } else if (Site.aliases.includes(args[0])) {
+        Site = Sites;
+      } else if (Sites.aliases.includes(args[0])) {
         site = args.shift();
+        Site = Sites;
       }
     }
+    if (Site.nsfw && !message.channel.nsfw) return message.channel.send("channel isnt nsfw!! and the booru is!!");
     Booru.search(site, args[0], { limit: 50, random: true })
       .then(posts => {
         let i = 0;
@@ -40,7 +45,7 @@ module.exports = {
             name: i,
             content: new MessageEmbed({
               title: post.id,
-              description: "[View](" + post.postView + ")\n``" + post.tags.slice(0, 10).join(" ") + "``",
+              description: "[View](" + post.postView + ")\n``" + post.tags.slice(0, 20).join(" ") + "``",
               fields: [
                 {
                   name: "Score",
