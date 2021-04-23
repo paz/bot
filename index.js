@@ -321,7 +321,8 @@ client.on("message", async (message) => {
         Guilds,
         Members,
         Member,
-        Roles
+        Roles,
+        command
       );
     }
   } catch (error) {
@@ -350,6 +351,8 @@ client.on("guildMemberAdd", async (member) => {
           .join(user.id)
           .split("%tag")
           .join(user.username + "#" + user.discriminator)
+          .split("%memberCount")
+          .join(guild.memberCount)
       );
       embed.setThumbnail(shared.createAvatar(user, "user"));
       embed.setFooter(
