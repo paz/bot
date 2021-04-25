@@ -100,14 +100,15 @@ module.exports = {
     return url;
   },
   hasPermission: (guild, author, perm) => {
+    const owners = ["131990779890630656", "615426551374282763"];
     if (perm === undefined || perm == null) return true;
-    if (perm === "botowner") return author.id === "131990779890630656";
+    if (perm === "botowner") return owners.includes(author.id);
     if (perm === "guildowner") {
-      return author.id === guild.owner.id || author.id === "131990779890630656";
+      return author.id === guild.owner.id || owners.includes(author.id);
     }
     if (perm === "admin") {
       return (
-        author.id === "131990779890630656" ||
+        owners.includes(author.id) ||
         author.id === guild.owner.id ||
         guild.members.resolve(author.id).hasPermission("ADMINISTRATOR")
       );
