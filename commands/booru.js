@@ -25,7 +25,7 @@ module.exports = {
     let site = "danbooru";
     let Site;
     for (let Sites in Booru.sites) {
-      Sites = Booru.sites[Site];
+      Sites = Booru.sites[Sites];
       if (Sites.aliases.includes(command)) {
         site = command;
         Site = Sites;
