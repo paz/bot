@@ -114,6 +114,11 @@ const Members = sequelize.define("members", {
     type: Sequelize.INTEGER,
     defaultValue: 0,
     allowNull: false
+  },
+  toggled: {
+    type: Sequelize.BOOLEAN,
+    defaultValue: false,
+    allowNull: false
   }
 });
 
@@ -211,6 +216,11 @@ client.on("message", async (message) => {
       shared.createAvatar(message.author, "user")
     );
     message.channel.send(afkEmbed);
+  }
+
+  console.log(Member.toggled);
+  if (Member.toggled) {
+    message.delete(); return;
   }
 
   if (!cooldowns.has("xpGain")) {
